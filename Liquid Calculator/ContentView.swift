@@ -17,6 +17,7 @@ struct ContentView: View {
     @State private var memoryValue: Double = 0
     @State private var phase = 0.0
     @State private var isAnimating = false
+    @State private var pressedButtonId: String? = nil
     
     enum Operation {
         case add, subtract, multiply, divide
@@ -32,25 +33,27 @@ struct ContentView: View {
                 // Enhanced liquid glass background
                 EnhancedLiquidGlassBackground()
                 
-                VStack(spacing: 0) {
-                    // Enhanced liquid glass display
-                    enhancedLiquidGlassDisplay
-                    
-                    // Scientific functions with enhanced liquid glass
-                    if showingScientific {
-                        enhancedLiquidGlassScientificPanel
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Enhanced liquid glass display
+                        enhancedLiquidGlassDisplay
+                        
+                        // Scientific functions with enhanced liquid glass
+                        if showingScientific {
+                            enhancedLiquidGlassScientificPanel
+                        }
+                        
+                        // Enhanced liquid glass scientific toggle
+                        enhancedLiquidGlassScientificToggle
+                        
+                        // Native-style calculator buttons with liquid glass
+                        nativeStyleCalculatorButtons
+                        
+                        Spacer(minLength: 20)
                     }
-                    
-                    // Enhanced liquid glass scientific toggle
-                    enhancedLiquidGlassScientificToggle
-                    
-                    // Native-style calculator buttons with liquid glass
-                    nativeStyleCalculatorButtons
-                    
-                    Spacer(minLength: 20)
+                    .padding(.top, 40)
+                    .padding(.horizontal, 20)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
             }
             .navigationTitle("Calculator")
             .navigationBarTitleDisplayMode(.large)
@@ -59,7 +62,7 @@ struct ContentView: View {
                     EnhancedLiquidGlassAngleToggle(
                         angleMode: angleMode,
                         action: {
-                            withAnimation(.easeInOut(duration: 0.3)) {
+                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                                 angleMode = angleMode == .degrees ? .radians : .degrees
                             }
                         }
@@ -80,31 +83,37 @@ struct ContentView: View {
     // MARK: - Display Views
     
     private var enhancedLiquidGlassDisplay: some View {
-        VStack(alignment: .trailing, spacing: 8) {
+        VStack(spacing: 8) {
+            // Previous calculation display
+            if previousValue != 0 || operation != nil {
+                HStack {
+                    Spacer()
+                    Text("\(previousValue, specifier: "%.10g")")
+                        .font(.system(size: 20, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.7))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+            }
+            
+            // Main display
             HStack {
                 Spacer()
                 Text(displayValue)
-                    .font(.system(size: 56, weight: .light, design: .monospaced))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.white, .white.opacity(0.9)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .font(.system(size: 48, weight: .light, design: .rounded))
+                    .foregroundStyle(.white)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.4)
-                    .shadow(color: .white.opacity(0.3), radius: 4, x: 0, y: 2)
+                    .minimumScaleFactor(0.7)
+                    .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 32)
-            .padding(.vertical, 28)
         }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 20)
         .background(
-            RoundedRectangle(cornerRadius: 32)
-                .fill(.thinMaterial)
+            RoundedRectangle(cornerRadius: 28)
+                .fill(.ultraThinMaterial)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 32)
+                    RoundedRectangle(cornerRadius: 28)
                         .stroke(
                             LinearGradient(
                                 colors: [
@@ -119,7 +128,7 @@ struct ContentView: View {
                         )
                 )
         )
-        .shadow(color: .black.opacity(0.4), radius: 35, x: 0, y: 25)
+        .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 12)
     }
     
     private var enhancedLiquidGlassScientificPanel: some View {
@@ -129,7 +138,10 @@ struct ContentView: View {
                     title: function.title,
                     subtitle: function.subtitle,
                     type: .scientific,
-                    action: { function.action() }
+                    action: { 
+                        print("Scientific function tapped: \(function.title)") // Debug
+                        function.action() 
+                    }
                 )
             }
         }
@@ -139,6 +151,7 @@ struct ContentView: View {
             RoundedRectangle(cornerRadius: 24)
                 .fill(.ultraThinMaterial)
         )
+        .padding(.bottom, 20) // Add bottom spacing
     }
     
     private var enhancedLiquidGlassScientificToggle: some View {
@@ -166,9 +179,9 @@ struct ContentView: View {
     }
     
     private var nativeStyleCalculatorButtons: some View {
-        VStack(spacing: 16) {
-            // Top row: AC, +/-, %, ÷
-            HStack(spacing: 16) {
+        VStack(spacing: 12) {
+            // Top row: AC, ±, %, ÷
+            HStack(spacing: 12) {
                 NativeStyleLiquidGlassButton(
                     title: "AC",
                     type: .function,
@@ -195,7 +208,7 @@ struct ContentView: View {
             }
             
             // Second row: 7, 8, 9, ×
-            HStack(spacing: 16) {
+            HStack(spacing: 12) {
                 NativeStyleLiquidGlassButton(
                     title: "7",
                     type: .number,
@@ -222,7 +235,7 @@ struct ContentView: View {
             }
             
             // Third row: 4, 5, 6, -
-            HStack(spacing: 16) {
+            HStack(spacing: 12) {
                 NativeStyleLiquidGlassButton(
                     title: "4",
                     type: .number,
@@ -249,7 +262,7 @@ struct ContentView: View {
             }
             
             // Fourth row: 1, 2, 3, +
-            HStack(spacing: 16) {
+            HStack(spacing: 12) {
                 NativeStyleLiquidGlassButton(
                     title: "1",
                     type: .number,
@@ -276,8 +289,7 @@ struct ContentView: View {
             }
             
             // Bottom row: 0, ., =
-            HStack(spacing: 16) {
-                // Zero button spans two columns
+            HStack(spacing: 12) {
                 NativeStyleLiquidGlassButton(
                     title: "0",
                     type: .number,
@@ -287,7 +299,7 @@ struct ContentView: View {
                 
                 NativeStyleLiquidGlassButton(
                     title: ".",
-                    type: .number,
+                    type: .function,
                     action: { appendDecimal() }
                 )
                 
@@ -298,8 +310,6 @@ struct ContentView: View {
                 )
             }
         }
-        .padding(.horizontal, 4)
-        .padding(.top, 16)
     }
     
     // Scientific functions
@@ -598,6 +608,8 @@ struct NativeStyleLiquidGlassButton: View {
     let isWide: Bool
     let action: () -> Void
     
+    @State private var isPressed = false
+    
     init(title: String, type: ButtonType, isWide: Bool = false, action: @escaping () -> Void) {
         self.title = title
         self.type = type
@@ -606,47 +618,72 @@ struct NativeStyleLiquidGlassButton: View {
     }
     
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            withAnimation(.easeInOut(duration: 0.1)) {
+                isPressed = true
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.easeInOut(duration: 0.1)) {
+                    isPressed = false
+                }
+            }
+            
+            action()
+        }) {
             Text(title)
                 .font(.system(size: 32, weight: .medium, design: .rounded))
                 .foregroundStyle(.white)
                 .frame(width: isWide ? 160 : 80, height: 80)
                 .background(
-                    Circle()
-                        .fill(backgroundColor)
-                        .overlay(
+                    ZStack {
+                        // Base button background
+                        Circle()
+                            .fill(backgroundColor)
+                        
+                        // Liquid glass effect on press
+                        if isPressed {
                             Circle()
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [
-                                            .white.opacity(0.3),
-                                            .white.opacity(0.1),
-                                            .clear
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 1
-                                )
-                        )
+                                .fill(.ultraThinMaterial)
+                                .opacity(0.6)
+                                .scaleEffect(1.1)
+                                .blur(radius: 2)
+                        }
+                        
+                        // Enhanced glass overlay
+                        Circle()
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        .white.opacity(0.4),
+                                        .white.opacity(0.1),
+                                        .clear
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1
+                            )
+                    }
                 )
-                .shadow(color: .black.opacity(0.25), radius: 20, x: 0, y: 12)
+                .scaleEffect(isPressed ? 0.95 : 1.0)
+                .shadow(color: .black.opacity(0.3), radius: isPressed ? 15 : 20, x: 0, y: isPressed ? 8 : 12)
         }
-        .buttonStyle(NativeLiquidGlassButtonStyle())
+        .buttonStyle(PlainButtonStyle())
     }
     
     private var backgroundColor: Color {
         switch type {
         case .number:
-            return Color.gray.opacity(0.3)
-        case .`operator`:
-            return Color.orange.opacity(0.8)
+            return Color(red: 0.2, green: 0.2, blue: 0.25)
+        case .operator:
+            return Color.orange
         case .function:
-            return Color.gray.opacity(0.3)
+            return Color(red: 0.15, green: 0.15, blue: 0.2)
         case .equals:
-            return Color.orange.opacity(0.8)
+            return Color.orange
         case .scientific:
-            return .clear
+            return Color(red: 0.1, green: 0.1, blue: 0.15)
         }
     }
 }
@@ -657,8 +694,22 @@ struct EnhancedLiquidGlassButton: View {
     let type: ButtonType
     let action: () -> Void
     
+    @State private var isPressed = false
+    
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            withAnimation(.easeInOut(duration: 0.1)) {
+                isPressed = true
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.easeInOut(duration: 0.1)) {
+                    isPressed = false
+                }
+            }
+            
+            action()
+        }) {
             VStack(spacing: 6) {
                 Text(title)
                     .font(.system(size: 24, weight: .semibold, design: .rounded))
@@ -672,28 +723,42 @@ struct EnhancedLiquidGlassButton: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 70)
+            .frame(height: 60)
             .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(backgroundColor)
+                ZStack {
+                    // Base button background
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(.ultraThinMaterial)
+                    
+                    // Liquid glass effect on press
+                    if isPressed {
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(.thinMaterial)
+                            .opacity(0.8)
+                            .scaleEffect(1.05)
+                            .blur(radius: 1)
+                    }
+                    
+                    // Enhanced glass overlay
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    .white.opacity(0.3),
+                                    .white.opacity(0.1),
+                                    .clear
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                }
             )
+            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .shadow(color: .black.opacity(0.2), radius: isPressed ? 8 : 12, x: 0, y: isPressed ? 4 : 8)
         }
         .buttonStyle(PlainButtonStyle())
-    }
-    
-    private var backgroundColor: Color {
-        switch type {
-        case .number:
-            return .clear
-        case .`operator`:
-            return Color.blue.opacity(0.3)
-        case .function:
-            return Color.orange.opacity(0.3)
-        case .equals:
-            return Color.green.opacity(0.4)
-        case .scientific:
-            return .clear
-        }
     }
 }
 
